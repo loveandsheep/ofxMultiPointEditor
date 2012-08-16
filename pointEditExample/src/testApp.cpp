@@ -5,8 +5,6 @@ void testApp::setup(){
 	ofSetVerticalSync(true);
 	ofSetFrameRate(60);
 	editor.SetArea(0,0,640,480);
-	child.SetArea(640,0,640,480);
-	editor.setChild(&child);
 }
 
 //--------------------------------------------------------------
@@ -19,10 +17,7 @@ void testApp::draw(){
 	ofBackground(0, 0, 0);
 	ofSetHexColor(0x0000aa);
 	ofRect(0,0,640,480);
-	ofSetHexColor(0xaa0000);
-	ofRect(640, 0, 640, 480);
 	editor.draw();
-	child.draw();
 }
 
 //--------------------------------------------------------------
