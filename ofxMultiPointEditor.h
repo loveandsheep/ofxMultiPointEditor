@@ -43,11 +43,17 @@ public:
 	void keyReleased(ofKeyEventArgs & key);
 	
 	void cdmEvent(ofxCDMEvent &ev);
-	
 	void draw();
 	
 	void load(string fname);
 	void save(string fname);
+	
+	void setChild(ofxMultiPointEditor * child);
+	void sync_Pts();
+	void sync_Rects();
+	void sync_Tris();
+	bool hasChild;
+	bool isChild;
 	
 	int active_pt;
 	int Edit_phase;
@@ -58,6 +64,7 @@ public:
 	deque<ofPoint> pts;
 	deque<ofxMPERect> rects;
 	deque<ofxMPETriangle> tris;
+	vector<ofxMultiPointEditor*> children;
 	
 	int menu_id;
 	ofxClickDownMenu menu;

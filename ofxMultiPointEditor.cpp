@@ -45,6 +45,8 @@ ofxMultiPointEditor::ofxMultiPointEditor(){
 	ofRegisterKeyEvents(this);
 	ofRegisterMouseEvents(this);
 	
+	hasChild = false;
+	isChild = false;
 	bSnap = true;
 	Edit_phase = PHASE_POINT;
 }
@@ -117,7 +119,7 @@ void ofxMultiPointEditor::draw(){
 		string mouseInfo = "";
 		if (Edit_phase == PHASE_POINT){
 			mouseInfo += "Point::";
-			if (active_pt == -1) mouseInfo += "Make Pt.";
+			if ((active_pt == -1)&&(!isChild)) mouseInfo += "Make Pt.";
 			if (active_pt != -1) mouseInfo += "Drag&move Pt.";
 		}else if (Edit_phase == PHASE_RECT){
 			mouseInfo += "Rect::";
@@ -126,10 +128,16 @@ void ofxMultiPointEditor::draw(){
 			mouseInfo += "Triangle::";
 			mouseInfo += "Select " + ofToString(tri_add_phase) + " Pt.";
 		}
-		ofSetColor(0, 0, 0,200);
-		ofRect(ofGetMouseX()+8, ofGetMouseY()+20, mouseInfo.length()*8, 14);
-		ofSetHexColor(0xFFFFFF);
-		ofDrawBitmapString(mouseInfo, ofGetMouseX()+10,ofGetMouseY()+30);		
+		
+		if (isChild) mouseInfo = "Child can move Pts only.";
+		
+		if ((drawArea.x < ofGetMouseX())&&(ofGetMouseX() < drawArea.x+drawArea.width)&&
+			(drawArea.y < ofGetMouseY())&&(ofGetMouseY() < drawArea.y+drawArea.height)){
+			ofSetColor(0, 0, 0,200);
+			ofRect(ofGetMouseX()+8, ofGetMouseY()+20, mouseInfo.length()*8, 14);
+			ofSetHexColor(0xFFFFFF);
+			ofDrawBitmapString(mouseInfo, ofGetMouseX()+10,ofGetMouseY()+30);			
+		}
 	}
 }
 
@@ -195,6 +203,9 @@ void ofxMultiPointEditor::cdmEvent(ofxCDMEvent &ev){
 		}
 		
 		pts.erase(pts.begin() + active_pt);
+		sync_Pts();
+		sync_Rects();
+		sync_Tris();
 	}
 	if (ev.message == menid + "Snap::ON" ) bSnap = true;
 	if (ev.message == menid + "Snap::OFF") bSnap = false;
@@ -211,11 +222,13 @@ void ofxMultiPointEditor::cdmEvent(ofxCDMEvent &ev){
 		Edit_phase = PHASE_POINT;
 	}
 	if ((ev.message.substr(0,menid.length()+4) == menid + "Save")&&
-		(ev.message.substr(menid.length()+6)) != "mouseFix"){
+		(ev.message.substr(menid.length()+6) != "mouseFix")&&
+		(ev.message.substr(menid.length()+6) != "X Cancel")){
 		save(ev.message.substr(menid.length()+6));
 	}
 	if ((ev.message.substr(0,menid.length()+4) == menid + "Load")&&
-		(ev.message.substr(menid.length()+6)) != "mouseFix"){
+		(ev.message.substr(menid.length()+6) != "mouseFix")&&
+		(ev.message.substr(menid.length()+6) != "X Cancel")){
 		load(ev.message.substr(menid.length()+6));
 	}
 }
@@ -236,10 +249,14 @@ void ofxMultiPointEditor::mouseMoved(ofMouseEventArgs & args){
 }
 void ofxMultiPointEditor::mousePressed(ofMouseEventArgs & args){
 	if (Edit_phase == PHASE_POINT){
-		if ((menu.phase == PHASE_WAIT)&&(active_pt == -1)) {//新規ポイントの作成
+		if ((menu.phase == PHASE_WAIT)&&(active_pt == -1)&&
+			(drawArea.x < args.x)&&(args.x < drawArea.x+drawArea.width)&&
+			(drawArea.y < args.y)&&(args.y < drawArea.y+drawArea.height)&&
+			(!isChild)) {//新規ポイントの作成
 			pts.push_back(ofPoint(MAX(0,MIN(drawArea.width,(args.x - drawArea.x)*buffer.getWidth()/drawArea.width)),
 								  MAX(0,MIN(drawArea.height,(args.y - drawArea.y)*buffer.getHeight()/drawArea.height))));
 			active_pt = pts.size() - 1;
+			sync_Pts();
 		}
 	}else if (Edit_phase == PHASE_RECT){
 		if ((menu.phase == PHASE_WAIT)&&(active_pt != -1)){//新規四角形の作成
@@ -252,6 +269,7 @@ void ofxMultiPointEditor::mousePressed(ofMouseEventArgs & args){
 					r.idx[i] = temp_pts[i];
 				}
 				rects.push_back(r);
+				sync_Rects();
 			}
 		}
 	}else if (Edit_phase == PHASE_TRIANGLE){
@@ -265,6 +283,7 @@ void ofxMultiPointEditor::mousePressed(ofMouseEventArgs & args){
 					t.idx[i] = temp_pts[i];
 				}
 				tris.push_back(t);
+				sync_Tris();
 			}
 		}
 	}
@@ -337,10 +356,12 @@ void ofxMultiPointEditor::load(string fname){
 		xml.popTag();
 		tris.push_back(r);
 	}
+	sync_Pts();
+	sync_Rects();
+	sync_Tris();
 }
 
 void ofxMultiPointEditor::save(string fname){
-	cout << fname << endl;
 	ofxXmlSettings xml;
 	fname += ".xml";
 	
@@ -396,5 +417,46 @@ void ofxMultiPointEditor::save(string fname){
 	 
 	 ...
 	 ---------------------*/
+}
+
+void ofxMultiPointEditor::setChild(ofxMultiPointEditor *child){
+	children.push_back(child);
+	child->isChild = true;
+	hasChild = true;
+	child->menu.UnRegisterMenu("Delete");
+	child->menu.UnRegisterMenu("Make");
+	child->menu.UnRegisterMenu("Load");
+	child->menu.UnRegisterMenu("Save");
+}
+
+void ofxMultiPointEditor::sync_Pts(){
+	for (int i = 0;i < children.size();i++){
+		children[i]->pts.clear();
+		for (int j = 0;j < pts.size();j++){
+			ofPoint p = ofPoint(pts[j].x*children[i]->drawArea.width / drawArea.width,
+								pts[j].y*children[i]->drawArea.height/ drawArea.hei);
+			children[i]->pts.push_back(p);
+		}
+	}
+}
+
+void ofxMultiPointEditor::sync_Rects(){
+	for (int i = 0;i < children.size();i++){
+		children[i]->rects.clear();
+		for (int j = 0;j < rects.size();j++){
+			ofxMPERect p = rects[j];
+			children[i]->rects.push_back(p);
+		}
+	}
 	
+}
+
+void ofxMultiPointEditor::sync_Tris(){
+	for (int i = 0;i < children.size();i++){
+		children[i]->tris.clear();
+		for (int j = 0;j < tris.size();j++){
+			ofxMPETriangle p = tris[j];
+			children[i]->tris.push_back(p);
+		}
+	}
 }
