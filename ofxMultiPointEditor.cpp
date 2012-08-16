@@ -19,15 +19,27 @@ ofxMultiPointEditor::ofxMultiPointEditor(){
 	PhaseBranch.push_back("POINT");
 	PhaseBranch.push_back("RECT");
 	PhaseBranch.push_back("TRIANGLE");
-	
-	menu_id = ofRandom(100000);
+
+	vector<string> PresetBranch;
+	PresetBranch.push_back("Preset0");
+	PresetBranch.push_back("Preset1");
+	PresetBranch.push_back("Preset2");
+	PresetBranch.push_back("Preset3");
+	PresetBranch.push_back("Preset4");
+	PresetBranch.push_back("Preset5");
+	PresetBranch.push_back("Preset6");
+	PresetBranch.push_back("Preset7");
+	PresetBranch.push_back("Preset8");
+	PresetBranch.push_back("Preset9");
+	ofSeedRandom();
+	menu_id = (int)ofRandom(100000);
 	menu.menu_name = "pts_Menu"+ofToString(menu_id);
 	menu.OnlyRightClick = true;
 	menu.RegisterMenu("Delete");
 	menu.RegisterBranch("Snap", &boolBranch);
 	menu.RegisterBranch("Make", &PhaseBranch);
-	
-	
+	menu.RegisterBranch("Load", &PresetBranch);
+	menu.RegisterBranch("Save", &PresetBranch);	
 	
 	ofAddListener(ofxCDMEvent::MenuPressed, this, &ofxMultiPointEditor::cdmEvent);
 	ofRegisterKeyEvents(this);
@@ -198,7 +210,14 @@ void ofxMultiPointEditor::cdmEvent(ofxCDMEvent &ev){
 	if (ev.message == menid + "Make::POINT"){
 		Edit_phase = PHASE_POINT;
 	}
-	
+	if ((ev.message.substr(0,menid.length()+4) == menid + "Save")&&
+		(ev.message.substr(menid.length()+6)) != "mouseFix"){
+		save(ev.message.substr(menid.length()+6));
+	}
+	if ((ev.message.substr(0,menid.length()+4) == menid + "Load")&&
+		(ev.message.substr(menid.length()+6)) != "mouseFix"){
+		load(ev.message.substr(menid.length()+6));
+	}
 }
 
 void ofxMultiPointEditor::mouseMoved(ofMouseEventArgs & args){
@@ -218,7 +237,8 @@ void ofxMultiPointEditor::mouseMoved(ofMouseEventArgs & args){
 void ofxMultiPointEditor::mousePressed(ofMouseEventArgs & args){
 	if (Edit_phase == PHASE_POINT){
 		if ((menu.phase == PHASE_WAIT)&&(active_pt == -1)) {//新規ポイントの作成
-			pts.push_back(ofPoint((args.x - drawArea.x)*buffer.getWidth()/drawArea.width,(args.y - drawArea.y)*buffer.getHeight()/drawArea.height));
+			pts.push_back(ofPoint(MAX(0,MIN(drawArea.width,(args.x - drawArea.x)*buffer.getWidth()/drawArea.width)),
+								  MAX(0,MIN(drawArea.height,(args.y - drawArea.y)*buffer.getHeight()/drawArea.height))));
 			active_pt = pts.size() - 1;
 		}
 	}else if (Edit_phase == PHASE_RECT){
@@ -254,8 +274,8 @@ void ofxMultiPointEditor::mouseReleased(ofMouseEventArgs & args){
 }
 void ofxMultiPointEditor::mouseDragged(ofMouseEventArgs & args){
 	if ((active_pt != -1)&&(Edit_phase == PHASE_POINT)){
-		pts[active_pt] = ofPoint(ofPoint(MAX(0,MIN(drawArea.width,(args.x - drawArea.x)*buffer.getWidth()/drawArea.width)),
-										 MAX(0,MIN(drawArea.height,(args.y - drawArea.y)*buffer.getHeight()/drawArea.height))));
+		pts[active_pt] = ofPoint(MAX(0,MIN(drawArea.width,(args.x - drawArea.x)*buffer.getWidth()/drawArea.width)),
+										 MAX(0,MIN(drawArea.height,(args.y - drawArea.y)*buffer.getHeight()/drawArea.height)));
 		//Snap
 		if (bSnap){
 			Snapping_h = false;
@@ -281,3 +301,100 @@ void ofxMultiPointEditor::keyReleased(ofKeyEventArgs & key){
 	
 }
 
+void ofxMultiPointEditor::load(string fname){
+	ofxXmlSettings xml;
+	fname += ".xml";
+	xml.loadFile(fname);
+	pts.clear();
+	rects.clear();
+	tris.clear();
+
+	for (int i = 0;i < xml.getNumTags("PT");i++){
+		ofPoint p;
+		xml.pushTag("PT",i);
+		p.x = xml.getValue("X", 0);
+		p.y = xml.getValue("Y", 0);
+		xml.popTag();
+		pts.push_back(p);
+	}
+	
+	for (int i = 0;i < xml.getNumTags("RECT");i++){
+		ofxMPERect r;
+		xml.pushTag("RECT",i);
+		for (int j = 0;j < 4;j++){
+			r.idx[j] = xml.getValue("IDX",0, j);
+		}
+		xml.popTag();
+		rects.push_back(r);
+	}
+	
+	for (int i = 0;i < xml.getNumTags("TRI");i++){
+		ofxMPETriangle r;
+		xml.pushTag("TRI",i);
+		for (int j = 0;j < 3;j++){
+			r.idx[j] = xml.getValue("IDX",0, j);
+		}
+		xml.popTag();
+		tris.push_back(r);
+	}
+}
+
+void ofxMultiPointEditor::save(string fname){
+	cout << fname << endl;
+	ofxXmlSettings xml;
+	fname += ".xml";
+	
+	for (int i = 0;i < pts.size();i++){
+		int tagNum = xml.addTag("PT");
+		xml.setValue("PT:X",pts[i].x, tagNum);
+		xml.setValue("PT:Y",pts[i].y, tagNum);
+	}
+	
+	for (int i = 0;i < rects.size();i++){
+		int tagNum = xml.addTag("RECT");
+		xml.pushTag("RECT",tagNum);
+		for (int j = 0;j < 4;j++){
+			int idxNum = xml.addTag("IDX");
+			xml.setValue("IDX",rects[i].idx[j], idxNum);
+		}
+		xml.popTag();
+	}
+	for (int i = 0;i < tris.size();i++){
+		int tagNum = xml.addTag("TRI");
+		xml.pushTag("TRI",tagNum);
+		for (int j = 0;j < 3;j++){
+			int idxNum = xml.addTag("IDX");
+			xml.setValue("IDX",tris[i].idx[j], idxNum);
+		}
+		xml.popTag();
+	}
+	
+	xml.saveFile(fname);
+	
+	/*--------------------
+	 <PT>
+	 <X>xxx</X>
+	 <Y>yyy</Y>
+	 </PT>
+	 
+	 ...
+	 
+	 <RECT>
+	 <IDX>1</IDX>
+	 <IDX>2</IDX>
+	 <IDX>3</IDX>
+	 <IDX>4</IDX>
+	 </RECT>
+	 
+	 ...
+	 
+	 <TRI>
+	 <IDX>1</IDX>
+	 <IDX>2</IDX>
+	 <IDX>3</IDX>
+	 </TRI>
+	 
+	 ...
+	 ---------------------*/
+	
+}

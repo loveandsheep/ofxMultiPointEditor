@@ -46,6 +46,9 @@ public:
 	
 	void draw();
 	
+	void load(string fname);
+	void save(string fname);
+	
 	int active_pt;
 	int Edit_phase;
 	int rect_add_phase;
