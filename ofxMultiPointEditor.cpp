@@ -264,8 +264,8 @@ void ofxMultiPointEditor::mousePressed(ofMouseEventArgs & args){
 			(drawArea.x < args.x)&&(args.x < drawArea.x+drawArea.width)&&
 			(drawArea.y < args.y)&&(args.y < drawArea.y+drawArea.height)&&
 			(!isChild)) {//新規ポイントの作成
-			pts.push_back(ofPoint(MAX(0,MIN(drawArea.width,(args.x - drawArea.x)*buffer.getWidth()/drawArea.width)),
-								  MAX(0,MIN(drawArea.height,(args.y - drawArea.y)*buffer.getHeight()/drawArea.height))));
+			pts.push_back(ofPoint(MAX(0,MIN(buffer.getWidth(),(args.x - drawArea.x)*buffer.getWidth()/drawArea.width)),
+								  MAX(0,MIN(buffer.getHeight(),(args.y - drawArea.y)*buffer.getHeight()/drawArea.height))));
 			active_pt = pts.size() - 1;
 			sync_Pts(-1);
 		}
@@ -305,8 +305,8 @@ void ofxMultiPointEditor::mouseReleased(ofMouseEventArgs & args){
 void ofxMultiPointEditor::mouseDragged(ofMouseEventArgs & args){
 	if ((active_pt != -1)&&(Edit_phase == PHASE_POINT)){
 		notSaved = true;
-		pts[active_pt] = ofPoint(MAX(0,MIN(drawArea.width,(args.x - drawArea.x)*buffer.getWidth()/drawArea.width)),
-										 MAX(0,MIN(drawArea.height,(args.y - drawArea.y)*buffer.getHeight()/drawArea.height)));
+		pts[active_pt] = ofPoint(MAX(0,MIN(buffer.getWidth(),(args.x - drawArea.x)*buffer.getWidth()/drawArea.width)),
+										 MAX(0,MIN(buffer.getHeight(),(args.y - drawArea.y)*buffer.getHeight()/drawArea.height)));
 		//Snap
 		if (bSnap){
 			Snapping_h = false;
