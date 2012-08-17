@@ -7,6 +7,7 @@
 //
 #include "ofxXmlSettings.h"
 #include "ofxClickDownMenu.h"
+#include "ofxMessageBox.h"
 #include <deque>
 
 #define MOUSE_STAT_DEFAULT 0
@@ -49,7 +50,7 @@ public:
 	void save(string fname);
 	
 	void setChild(ofxMultiPointEditor * child);
-	void sync_Pts();
+	void sync_Pts(int bMake);
 	void sync_Rects();
 	void sync_Tris();
 	bool hasChild;
@@ -71,4 +72,8 @@ public:
 	bool bSnap;
 	bool Snapping_h;
 	bool Snapping_v;
+	
+	ofxMessageBox dialog;
+	string StayLoader;
+	bool notSaved;
 };

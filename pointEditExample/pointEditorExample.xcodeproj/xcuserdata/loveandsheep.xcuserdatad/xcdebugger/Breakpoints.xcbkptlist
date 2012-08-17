@@ -8,22 +8,22 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "../ofxMultiPointEditor.h"
-         timestampString = "366783189.604027"
+         timestampString = "366865754.17978"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "22"
-         endingLineNumber = "22">
+         startingLineNumber = "23"
+         endingLineNumber = "23">
       </FileBreakpoint>
       <FileBreakpoint
          shouldBeEnabled = "No"
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "../ofxMultiPointEditor.h"
-         timestampString = "366783193.771118"
+         timestampString = "366865754.17978"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "23"
-         endingLineNumber = "23">
+         startingLineNumber = "24"
+         endingLineNumber = "24">
       </FileBreakpoint>
    </FileBreakpoints>
 </Bucket>

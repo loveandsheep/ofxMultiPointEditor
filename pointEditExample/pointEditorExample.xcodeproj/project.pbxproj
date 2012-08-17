@@ -16,6 +16,8 @@
 		C627E74E15DB957F004E8AA1 /* tinyxmlerror.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C627E73E15DB957F004E8AA1 /* tinyxmlerror.cpp */; };
 		C627E74F15DB957F004E8AA1 /* tinyxmlparser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C627E73F15DB957F004E8AA1 /* tinyxmlparser.cpp */; };
 		C627E75015DB957F004E8AA1 /* ofxXmlSettings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C627E74115DB957F004E8AA1 /* ofxXmlSettings.cpp */; };
+		C6547F2415DDEA1400500382 /* EaseRectBox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6547F0E15DDEA1400500382 /* EaseRectBox.cpp */; };
+		C6547F2715DDEA1400500382 /* ofxMessageBox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C6547F1D15DDEA1400500382 /* ofxMessageBox.cpp */; };
 		E4328149138ABC9F0047C5CB /* openFrameworksDebug.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E4328148138ABC890047C5CB /* openFrameworksDebug.a */; };
 		E45BE97B0E8CC7DD009D7055 /* AGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45BE9710E8CC7DD009D7055 /* AGL.framework */; };
 		E45BE97C0E8CC7DD009D7055 /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E45BE9720E8CC7DD009D7055 /* ApplicationServices.framework */; };
@@ -80,6 +82,10 @@
 		C627E73F15DB957F004E8AA1 /* tinyxmlparser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tinyxmlparser.cpp; sourceTree = "<group>"; };
 		C627E74115DB957F004E8AA1 /* ofxXmlSettings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxXmlSettings.cpp; sourceTree = "<group>"; };
 		C627E74215DB957F004E8AA1 /* ofxXmlSettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxXmlSettings.h; sourceTree = "<group>"; };
+		C6547F0E15DDEA1400500382 /* EaseRectBox.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EaseRectBox.cpp; sourceTree = "<group>"; };
+		C6547F0F15DDEA1400500382 /* EaseRectBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EaseRectBox.h; sourceTree = "<group>"; };
+		C6547F1D15DDEA1400500382 /* ofxMessageBox.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxMessageBox.cpp; sourceTree = "<group>"; };
+		C6547F1E15DDEA1400500382 /* ofxMessageBox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxMessageBox.h; sourceTree = "<group>"; };
 		E4328143138ABC890047C5CB /* openFrameworksLib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = openFrameworksLib.xcodeproj; path = ../../../libs/openFrameworksCompiled/project/osx/openFrameworksLib.xcodeproj; sourceTree = SOURCE_ROOT; };
 		E45BE9710E8CC7DD009D7055 /* AGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AGL.framework; path = /System/Library/Frameworks/AGL.framework; sourceTree = "<absolute>"; };
 		E45BE9720E8CC7DD009D7055 /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
@@ -180,6 +186,7 @@
 		C627E73A15DB957F004E8AA1 /* ofxXmlSettings */ = {
 			isa = PBXGroup;
 			children = (
+				C6547F0D15DDEA1400500382 /* ofxMessageBox */,
 				C627E73B15DB957F004E8AA1 /* libs */,
 				C627E74015DB957F004E8AA1 /* src */,
 			);
@@ -205,6 +212,18 @@
 				C627E74215DB957F004E8AA1 /* ofxXmlSettings.h */,
 			);
 			path = src;
+			sourceTree = "<group>";
+		};
+		C6547F0D15DDEA1400500382 /* ofxMessageBox */ = {
+			isa = PBXGroup;
+			children = (
+				C6547F0E15DDEA1400500382 /* EaseRectBox.cpp */,
+				C6547F0F15DDEA1400500382 /* EaseRectBox.h */,
+				C6547F1D15DDEA1400500382 /* ofxMessageBox.cpp */,
+				C6547F1E15DDEA1400500382 /* ofxMessageBox.h */,
+			);
+			name = ofxMessageBox;
+			path = ../ofxMessageBox;
 			sourceTree = "<group>";
 		};
 		E4328144138ABC890047C5CB /* Products */ = {
@@ -352,6 +371,8 @@
 				C627E74E15DB957F004E8AA1 /* tinyxmlerror.cpp in Sources */,
 				C627E74F15DB957F004E8AA1 /* tinyxmlparser.cpp in Sources */,
 				C627E75015DB957F004E8AA1 /* ofxXmlSettings.cpp in Sources */,
+				C6547F2415DDEA1400500382 /* EaseRectBox.cpp in Sources */,
+				C6547F2715DDEA1400500382 /* ofxMessageBox.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

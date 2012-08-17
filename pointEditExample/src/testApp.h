@@ -19,5 +19,5 @@ class testApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 	
-	ofxMultiPointEditor editor;
+	ofxMultiPointEditor editor,child;
 };

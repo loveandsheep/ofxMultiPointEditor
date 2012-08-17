@@ -49,6 +49,9 @@ ofxMultiPointEditor::ofxMultiPointEditor(){
 	isChild = false;
 	bSnap = true;
 	Edit_phase = PHASE_POINT;
+	
+	dialog.addNewMessage("Notice", "Not saved. Continue?", OFX_MESSAGEBOX_YESNO);
+	notSaved = false;
 }
 
 ofxMultiPointEditor::~ofxMultiPointEditor(){
@@ -57,6 +60,9 @@ ofxMultiPointEditor::~ofxMultiPointEditor(){
 }
 
 void ofxMultiPointEditor::draw(){
+	if (dialog.getResponse() == 0){
+		load(StayLoader);
+	}
 	buffer.begin();
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -203,7 +209,7 @@ void ofxMultiPointEditor::cdmEvent(ofxCDMEvent &ev){
 		}
 		
 		pts.erase(pts.begin() + active_pt);
-		sync_Pts();
+		sync_Pts(active_pt);
 		sync_Rects();
 		sync_Tris();
 	}
@@ -223,13 +229,18 @@ void ofxMultiPointEditor::cdmEvent(ofxCDMEvent &ev){
 	}
 	if ((ev.message.substr(0,menid.length()+4) == menid + "Save")&&
 		(ev.message.substr(menid.length()+6) != "mouseFix")&&
-		(ev.message.substr(menid.length()+6) != "X Cancel")){
+		(ev.message.substr(menid.length()+6) != " X Cancel")){
 		save(ev.message.substr(menid.length()+6));
 	}
 	if ((ev.message.substr(0,menid.length()+4) == menid + "Load")&&
 		(ev.message.substr(menid.length()+6) != "mouseFix")&&
-		(ev.message.substr(menid.length()+6) != "X Cancel")){
-		load(ev.message.substr(menid.length()+6));
+		(ev.message.substr(menid.length()+6) != " X Cancel")){
+		if (!notSaved){
+			load(ev.message.substr(menid.length()+6));
+		}else{
+			StayLoader = ev.message.substr(menid.length()+6);
+			dialog.viewMessage(0);
+		}
 	}
 }
 
@@ -256,7 +267,7 @@ void ofxMultiPointEditor::mousePressed(ofMouseEventArgs & args){
 			pts.push_back(ofPoint(MAX(0,MIN(drawArea.width,(args.x - drawArea.x)*buffer.getWidth()/drawArea.width)),
 								  MAX(0,MIN(drawArea.height,(args.y - drawArea.y)*buffer.getHeight()/drawArea.height))));
 			active_pt = pts.size() - 1;
-			sync_Pts();
+			sync_Pts(-1);
 		}
 	}else if (Edit_phase == PHASE_RECT){
 		if ((menu.phase == PHASE_WAIT)&&(active_pt != -1)){//新規四角形の作成
@@ -293,6 +304,7 @@ void ofxMultiPointEditor::mouseReleased(ofMouseEventArgs & args){
 }
 void ofxMultiPointEditor::mouseDragged(ofMouseEventArgs & args){
 	if ((active_pt != -1)&&(Edit_phase == PHASE_POINT)){
+		notSaved = true;
 		pts[active_pt] = ofPoint(MAX(0,MIN(drawArea.width,(args.x - drawArea.x)*buffer.getWidth()/drawArea.width)),
 										 MAX(0,MIN(drawArea.height,(args.y - drawArea.y)*buffer.getHeight()/drawArea.height)));
 		//Snap
@@ -356,9 +368,10 @@ void ofxMultiPointEditor::load(string fname){
 		xml.popTag();
 		tris.push_back(r);
 	}
-	sync_Pts();
-	sync_Rects();
-	sync_Tris();
+	for (int i = 0;i < children.size();i++){
+		children[i]->load("child_"+ofToString(i)+"_"+fname);
+	}
+	notSaved = false;
 }
 
 void ofxMultiPointEditor::save(string fname){
@@ -391,7 +404,10 @@ void ofxMultiPointEditor::save(string fname){
 	}
 	
 	xml.saveFile(fname);
-	
+	for (int i = 0;i < children.size();i++){
+		children[i]->save("child_"+ofToString(i)+"_"+fname);
+	}
+	notSaved = false;
 	/*--------------------
 	 <PT>
 	 <X>xxx</X>
@@ -429,18 +445,22 @@ void ofxMultiPointEditor::setChild(ofxMultiPointEditor *child){
 	child->menu.UnRegisterMenu("Save");
 }
 
-void ofxMultiPointEditor::sync_Pts(){
-	for (int i = 0;i < children.size();i++){
-		children[i]->pts.clear();
-		for (int j = 0;j < pts.size();j++){
-			ofPoint p = ofPoint(pts[j].x*children[i]->drawArea.width / drawArea.width,
-								pts[j].y*children[i]->drawArea.height/ drawArea.hei);
+void ofxMultiPointEditor::sync_Pts(int bMake){
+	if (bMake == -1){
+		for (int i = 0;i < children.size();i++){
+			ofPoint p = pts[pts.size()-1];
 			children[i]->pts.push_back(p);
 		}
+	}else{
+		for (int i = 0;i < children.size();i++){
+			children[i]->pts.erase(children[i]->pts.begin()+bMake);
+		}
 	}
+	notSaved = true;
 }
 
 void ofxMultiPointEditor::sync_Rects(){
+	notSaved = true;
 	for (int i = 0;i < children.size();i++){
 		children[i]->rects.clear();
 		for (int j = 0;j < rects.size();j++){
@@ -452,6 +472,7 @@ void ofxMultiPointEditor::sync_Rects(){
 }
 
 void ofxMultiPointEditor::sync_Tris(){
+	notSaved = true;
 	for (int i = 0;i < children.size();i++){
 		children[i]->tris.clear();
 		for (int j = 0;j < tris.size();j++){
