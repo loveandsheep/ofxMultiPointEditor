@@ -52,14 +52,16 @@ ofxMultiPointEditor::ofxMultiPointEditor(){
 	
 	dialog.addNewMessage("Notice", "Not saved. Continue?", OFX_MESSAGEBOX_YESNO);
 	notSaved = false;
+	last_selected = -1;
 }
 
 ofxMultiPointEditor::~ofxMultiPointEditor(){
-	ofUnregisterKeyEvents(this);
+	ofUnregisterMouseEvents(this);
 	ofUnregisterKeyEvents(this);
 }
 
 void ofxMultiPointEditor::draw(){
+	if (active_pt != -1) last_selected = active_pt;
 	if (dialog.getResponse() == 0){
 		load(StayLoader);
 	}
@@ -75,6 +77,9 @@ void ofxMultiPointEditor::draw(){
 
 		ofNoFill();
 		ofSetHexColor(0xFFFFFF);
+		if (i == last_selected){
+			ofCircle(pts[i], 10);
+		}
 		ofLine(pts[i].x-6, pts[i].y, pts[i].x+6, pts[i].y);
 		ofLine(pts[i].x, pts[i].y-6, pts[i].x, pts[i].y+6);
 		ofFill();
@@ -326,7 +331,12 @@ void ofxMultiPointEditor::mouseDragged(ofMouseEventArgs & args){
 }
 
 void ofxMultiPointEditor::keyPressed(ofKeyEventArgs & key){
-	
+	if (last_selected != -1){
+		if (key.key == OF_KEY_UP)	pts[last_selected].y--;
+		if (key.key == OF_KEY_DOWN)	pts[last_selected].y++;
+		if (key.key == OF_KEY_LEFT) pts[last_selected].x--;
+		if (key.key == OF_KEY_RIGHT)pts[last_selected].x++;
+	}
 }
 void ofxMultiPointEditor::keyReleased(ofKeyEventArgs & key){
 	

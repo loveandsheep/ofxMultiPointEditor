@@ -57,6 +57,7 @@ public:
 	bool isChild;
 	
 	int active_pt;
+	int last_selected;
 	int Edit_phase;
 	int rect_add_phase;
 	int tri_add_phase;
@@ -76,4 +77,6 @@ public:
 	ofxMessageBox dialog;
 	string StayLoader;
 	bool notSaved;
+	
+	ofRectangle main_out_r,src_out_r;
 };
