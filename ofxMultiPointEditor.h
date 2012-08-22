@@ -17,6 +17,8 @@
 #define PHASE_RECT 1
 #define PHASE_TRIANGLE 2
 
+#define MOVEVIEW_FRAME 90
+
 struct ofxMPERect{
 	int idx[4];
 };
@@ -73,10 +75,15 @@ public:
 	bool bSnap;
 	bool Snapping_h;
 	bool Snapping_v;
+	int moveView_count;
 	
 	ofxMessageBox dialog;
 	string StayLoader;
 	bool notSaved;
 	
 	ofRectangle main_out_r,src_out_r;
+	int mv_motion_count;
+	float mv_length;
+	int mv_last_slc;
+
 };

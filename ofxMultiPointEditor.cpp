@@ -53,6 +53,7 @@ ofxMultiPointEditor::ofxMultiPointEditor(){
 	dialog.addNewMessage("Notice", "Not saved. Continue?", OFX_MESSAGEBOX_YESNO);
 	notSaved = false;
 	last_selected = -1;
+	moveView_count = 0;
 }
 
 ofxMultiPointEditor::~ofxMultiPointEditor(){
@@ -119,6 +120,43 @@ void ofxMultiPointEditor::draw(){
 		glEnd();
 	}
 	
+	if (moveView_count > 0){
+		int alpha = 255;
+		if (moveView_count < 10){
+			alpha = 255 - (10 - moveView_count)/10.0*255;
+		}
+		
+		string point = "(" + ofToString(pts[last_selected].x) + 
+					   "," + ofToString(pts[last_selected].y) + ")";
+		string mes = "";
+		mes += point.substr(0,MIN(point.length(),(mv_motion_count)/2));
+		for (int j = 0;j < MAX(0,(float)point.length()-MAX(0,(mv_motion_count)/2));j++){
+			mes += ofToString((char)ofRandom(33,120));
+		}
+		
+		if (mv_last_slc != last_selected) {
+			mv_motion_count = 0;
+			mv_length = 0;
+			mv_last_slc = last_selected;
+		}
+		mv_length += (1.0 - mv_length) / 3.0;
+		mv_motion_count++;
+		
+		ofSetColor(255,alpha);
+		moveView_count--;
+		ofLine(pts[last_selected],pts[last_selected]+ofPoint(20*MIN(0.3,mv_length)/0.3,
+															 -20*MIN(0.3,mv_length)/0.3));
+		ofLine(pts[last_selected]+ofPoint(20,-20),
+			   pts[last_selected]+ofPoint(20+20*MAX(0,mv_length-0.3)/0.7,-20));
+		ofSetColor(0, 0, 0,200/255.0*alpha);
+		ofRect(pts[last_selected]+ofPoint(25,-30), mv_length*point.length()*8+2, 15);
+		ofSetColor(255, alpha);
+		ofDrawBitmapString(mes,pts[last_selected] + ofPoint(25,-18));
+	}else{
+		mv_motion_count = 0;
+		mv_length = 0;
+	}
+	
 	buffer.end();
 	
 	ofSetHexColor(0xFFFFFF);
@@ -127,27 +165,31 @@ void ofxMultiPointEditor::draw(){
 	menu.draw();
 	
 	if (menu.phase == PHASE_WAIT){
+		ofColor rect_col;
 		string mouseInfo = "";
 		if (Edit_phase == PHASE_POINT){
 			mouseInfo += "Point::";
 			if ((active_pt == -1)&&(!isChild)) mouseInfo += "Make Pt.";
 			if (active_pt != -1) mouseInfo += "Drag&move Pt.";
+			rect_col.set(0, 0, 0,200);
 		}else if (Edit_phase == PHASE_RECT){
 			mouseInfo += "Rect::";
 			mouseInfo += "Select " + ofToString(rect_add_phase) + " Pt.";
+			rect_col.set(0, 0, 200,200);
 		}else if (Edit_phase == PHASE_TRIANGLE){
 			mouseInfo += "Triangle::";
 			mouseInfo += "Select " + ofToString(tri_add_phase) + " Pt.";
+			rect_col.set(200, 0, 0,200);
 		}
 		
 		if (isChild) mouseInfo = "Child can move Pts only.";
 		
 		if ((drawArea.x < ofGetMouseX())&&(ofGetMouseX() < drawArea.x+drawArea.width)&&
 			(drawArea.y < ofGetMouseY())&&(ofGetMouseY() < drawArea.y+drawArea.height)){
-			ofSetColor(0, 0, 0,200);
-			ofRect(ofGetMouseX()+8, ofGetMouseY()+20, mouseInfo.length()*8, 14);
+			ofSetColor(rect_col);
+			ofRect(ofGetMouseX()+8, ofGetMouseY()+20, mouseInfo.length()*8+2, 15);
 			ofSetHexColor(0xFFFFFF);
-			ofDrawBitmapString(mouseInfo, ofGetMouseX()+10,ofGetMouseY()+30);			
+			ofDrawBitmapString(mouseInfo, ofGetMouseX()+10,ofGetMouseY()+31);
 		}
 	}
 }
@@ -265,6 +307,7 @@ void ofxMultiPointEditor::mouseMoved(ofMouseEventArgs & args){
 }
 void ofxMultiPointEditor::mousePressed(ofMouseEventArgs & args){
 	if (Edit_phase == PHASE_POINT){
+		moveView_count = MOVEVIEW_FRAME;
 		if ((menu.phase == PHASE_WAIT)&&(active_pt == -1)&&
 			(drawArea.x < args.x)&&(args.x < drawArea.x+drawArea.width)&&
 			(drawArea.y < args.y)&&(args.y < drawArea.y+drawArea.height)&&
@@ -309,6 +352,7 @@ void ofxMultiPointEditor::mouseReleased(ofMouseEventArgs & args){
 }
 void ofxMultiPointEditor::mouseDragged(ofMouseEventArgs & args){
 	if ((active_pt != -1)&&(Edit_phase == PHASE_POINT)){
+		moveView_count = MOVEVIEW_FRAME;
 		notSaved = true;
 		pts[active_pt] = ofPoint(MAX(0,MIN(buffer.getWidth(),(args.x - drawArea.x)*buffer.getWidth()/drawArea.width)),
 										 MAX(0,MIN(buffer.getHeight(),(args.y - drawArea.y)*buffer.getHeight()/drawArea.height)));
@@ -332,10 +376,28 @@ void ofxMultiPointEditor::mouseDragged(ofMouseEventArgs & args){
 
 void ofxMultiPointEditor::keyPressed(ofKeyEventArgs & key){
 	if (last_selected != -1){
+		moveView_count = MOVEVIEW_FRAME;
 		if (key.key == OF_KEY_UP)	pts[last_selected].y--;
 		if (key.key == OF_KEY_DOWN)	pts[last_selected].y++;
 		if (key.key == OF_KEY_LEFT) pts[last_selected].x--;
 		if (key.key == OF_KEY_RIGHT)pts[last_selected].x++;
+	}
+	if (drawArea.inside(ofGetMouseX(), ofGetMouseY())){
+		if (key.key == 'r') {
+			ofxCDMEvent ev;
+			ev.message = menu.menu_name + "::Make::RECT";
+			cdmEvent(ev);
+		}
+		if (key.key == 't') {
+			ofxCDMEvent ev;
+			ev.message = menu.menu_name + "::Make::TRIANGLE";
+			cdmEvent(ev);
+		}
+		if (key.key == 'p') {
+			ofxCDMEvent ev;
+			ev.message = menu.menu_name + "::Make::POINT";
+			cdmEvent(ev);
+		}
 	}
 }
 void ofxMultiPointEditor::keyReleased(ofKeyEventArgs & key){
