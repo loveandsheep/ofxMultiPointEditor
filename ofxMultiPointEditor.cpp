@@ -120,7 +120,7 @@ void ofxMultiPointEditor::draw(){
 		glEnd();
 	}
 	
-	if (moveView_count > 0){
+	if ((moveView_count > 0)&&(last_selected != -1)){
 		int alpha = 255;
 		if (moveView_count < 10){
 			alpha = 255 - (10 - moveView_count)/10.0*255;
