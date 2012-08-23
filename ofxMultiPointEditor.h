@@ -83,7 +83,7 @@ public:
 	
 	ofRectangle main_out_r,src_out_r;
 	int mv_motion_count;
-	float mv_length;
+	float mv_length,mv_length_line;
 	int mv_last_slc;
 
 };

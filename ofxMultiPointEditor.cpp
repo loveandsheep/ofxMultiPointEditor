@@ -137,17 +137,19 @@ void ofxMultiPointEditor::draw(){
 		if (mv_last_slc != last_selected) {
 			mv_motion_count = 0;
 			mv_length = 0;
+			mv_length_line = 0;
 			mv_last_slc = last_selected;
 		}
 		mv_length += (1.0 - mv_length) / 3.0;
+		mv_length_line += (1.0 - mv_length_line) / 28.0;
 		mv_motion_count++;
 		
 		ofSetColor(255,alpha);
 		moveView_count--;
-		ofLine(pts[last_selected],pts[last_selected]+ofPoint(20*MIN(0.3,mv_length)/0.3,
-															 -20*MIN(0.3,mv_length)/0.3));
+		ofLine(pts[last_selected],pts[last_selected]+ofPoint(20*MIN(0.3,mv_length_line)/0.3,
+															 -20*MIN(0.3,mv_length_line)/0.3));
 		ofLine(pts[last_selected]+ofPoint(20,-20),
-			   pts[last_selected]+ofPoint(20+20*MAX(0,mv_length-0.3)/0.7,-20));
+			   pts[last_selected]+ofPoint(20+20*MAX(0,mv_length_line-0.3)/0.7,-20));
 		ofSetColor(0, 0, 0,200/255.0*alpha);
 		ofRect(pts[last_selected]+ofPoint(25,-30), mv_length*point.length()*8+2, 15);
 		ofSetColor(255, alpha);
@@ -155,6 +157,7 @@ void ofxMultiPointEditor::draw(){
 	}else{
 		mv_motion_count = 0;
 		mv_length = 0;
+		mv_length_line = 0;
 	}
 	
 	buffer.end();
@@ -376,7 +379,12 @@ void ofxMultiPointEditor::mouseDragged(ofMouseEventArgs & args){
 
 void ofxMultiPointEditor::keyPressed(ofKeyEventArgs & key){
 	if (last_selected != -1){
-		moveView_count = MOVEVIEW_FRAME;
+		if ((key.key == OF_KEY_UP)||
+			(key.key == OF_KEY_DOWN)||
+			(key.key == OF_KEY_LEFT)||
+			(key.key == OF_KEY_RIGHT)){
+			moveView_count = MOVEVIEW_FRAME;
+		}
 		if (key.key == OF_KEY_UP)	pts[last_selected].y--;
 		if (key.key == OF_KEY_DOWN)	pts[last_selected].y++;
 		if (key.key == OF_KEY_LEFT) pts[last_selected].x--;
