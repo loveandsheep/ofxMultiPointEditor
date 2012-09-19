@@ -8,6 +8,7 @@
 #include "ofxMultiPointEditor.h"
 
 ofxMultiPointEditor::ofxMultiPointEditor(){
+	sclPt.set(0, 0);
 	bAllocated = false;
 	
 	active_pt = -1;
@@ -88,12 +89,36 @@ void ofxMultiPointEditor::draw(){
 		ofSetRectMode(OF_RECTMODE_CORNER);
 	}
 	for (int i = 0;i < rects.size();i++){
+		ofColor col;
+		col.setHsb((i*30)%255, 255, 255,228);
+		ofSetColor(col);
+		glBegin(GL_QUADS);
+		for (int j = 0;j < 4;j++){
+			glVertex2f(pts[rects[i].idx[j]].x, pts[rects[i].idx[j]].y);
+		}
+		glEnd();
 		ofSetHexColor(0xFFFFFF);
 		glBegin(GL_LINE_LOOP);
 		for (int j = 0;j < 4;j++){
 			glVertex2f(pts[rects[i].idx[j]].x, pts[rects[i].idx[j]].y);
 		}
 		glEnd();
+		if (false){
+			ofPoint centroid;
+			float s1,s2;
+			s1 = ((pts[rects[i].idx[3]].x - pts[rects[i].idx[1]].x) *
+				  (pts[rects[i].idx[0]].y - pts[rects[i].idx[1]].y) -
+				  (pts[rects[i].idx[3]].y - pts[rects[i].idx[1]].y) *
+				  (pts[rects[i].idx[0]].x - pts[rects[i].idx[1]].x))/2.0;
+			s2 = ((pts[rects[i].idx[3]].x - pts[rects[i].idx[1]].x) *
+				  (pts[rects[i].idx[1]].y - pts[rects[i].idx[2]].y) -
+				  (pts[rects[i].idx[3]].y - pts[rects[i].idx[1]].y) *
+				  (pts[rects[i].idx[1]].x - pts[rects[i].idx[2]].x))/2.0;
+			
+			centroid.x = pts[rects[i].idx[0]].x + (pts[rects[i].idx[2]].x - pts[rects[i].idx[0]].x) * s1 / (s1 + s2);
+			centroid.y = pts[rects[i].idx[0]].y + (pts[rects[i].idx[2]].y - pts[rects[i].idx[0]].y) * s1 / (s1 + s2);
+			ofDrawBitmapString("R:0x" + ofToString(ofToHex(char(i))), centroid);			
+		}
 	}
 	for (int i = 0;i < tris.size();i++){
 		ofSetHexColor(0xFFFFFF);
@@ -115,8 +140,8 @@ void ofxMultiPointEditor::draw(){
 		for (int i = 0;i < ((Edit_phase == PHASE_RECT) ? rect_add_phase : tri_add_phase);i++){
 			glVertex2f(pts[temp_pts[i]].x, pts[temp_pts[i]].y);
 		}
-		glVertex2f((ofGetMouseX() - drawArea.x)*buffer.getWidth()/drawArea.width,
-				   (ofGetMouseY() - drawArea.y)*buffer.getHeight()/drawArea.height);
+		glVertex2f((ofGetMouseX() - drawArea.x+sclPt.x)*((enableScroll) ? 1.0 : buffer.getWidth()/drawArea.width),
+				   (ofGetMouseY() - drawArea.y+sclPt.y)*((enableScroll) ? 1.0 : buffer.getHeight()/drawArea.height));
 		glEnd();
 	}
 	
@@ -164,7 +189,27 @@ void ofxMultiPointEditor::draw(){
 	
 	ofSetHexColor(0xFFFFFF);
 	ofEnableBlendMode(OF_BLENDMODE_ALPHA);
-	buffer.draw(drawArea.x,drawArea.y,drawArea.width,drawArea.height);
+	if (enableScroll){
+		buffer.getTextureReference().bind();
+		glBegin(GL_TRIANGLE_STRIP);
+		
+		glTexCoord2f(sclPt.x,sclPt.y);
+		glVertex2f(drawArea.x, drawArea.y);
+		
+		glTexCoord2f(sclPt.x+drawArea.width,sclPt.y);
+		glVertex2f(drawArea.x+drawArea.width, drawArea.y);
+		
+		glTexCoord2f(sclPt.x,sclPt.y+drawArea.height);
+		glVertex2f(drawArea.x, drawArea.y+drawArea.height);
+
+		glTexCoord2f(sclPt.x+drawArea.width,sclPt.y+drawArea.height);
+		glVertex2f(drawArea.x+drawArea.width, drawArea.y+drawArea.height);
+		
+		glEnd();
+		buffer.getTextureReference().unbind();
+	}else{
+		buffer.draw(drawArea.x,drawArea.y,drawArea.width,drawArea.height);
+	}
 	menu.draw();
 	
 	if (menu.phase == PHASE_WAIT){
@@ -295,13 +340,24 @@ void ofxMultiPointEditor::cdmEvent(ofxCDMEvent &ev){
 }
 
 void ofxMultiPointEditor::mouseMoved(ofMouseEventArgs & args){
+	if (enableScroll) {
+		sclPt.set(MAX(0,MIN(buffer.getWidth() - drawArea.width,ofGetMouseX())),
+				  MAX(0,MIN(buffer.getHeight() - drawArea.height,ofGetMouseY())));
+		for (int i = 0;i < children.size();i++){
+			children[i]->sclPt = sclPt;
+		}
+	}
+
 	menu.Enable = ((drawArea.x < args.x)&&(args.x < drawArea.x+drawArea.width)&&
 				   (drawArea.y < args.y)&&(args.y < drawArea.y+drawArea.height));
+	ofPoint mpt = ofPoint(args.x,args.y);
+	if (enableScroll) mpt += sclPt;
+
 	if (menu.phase == PHASE_WAIT){
 		active_pt = -1;
 		for (int i = 0;i < pts.size();i++){
-			if (pts[i].distance(ofVec3f((args.x - drawArea.x)*buffer.getWidth()/drawArea.width,
-										(args.y - drawArea.y)*buffer.getHeight()/drawArea.height,0)) < 13){
+			if (pts[i].distance(ofVec3f((mpt.x - drawArea.x)*((enableScroll) ? 1.0 : buffer.getWidth()/drawArea.width),
+										(mpt.y - drawArea.y)*((enableScroll) ? 1.0 : buffer.getHeight()/drawArea.height),0)) < 13){
 				active_pt = i;
 			}
 		}
@@ -315,8 +371,11 @@ void ofxMultiPointEditor::mousePressed(ofMouseEventArgs & args){
 			(drawArea.x < args.x)&&(args.x < drawArea.x+drawArea.width)&&
 			(drawArea.y < args.y)&&(args.y < drawArea.y+drawArea.height)&&
 			(!isChild)) {//新規ポイントの作成
-			pts.push_back(ofPoint(MAX(0,MIN(buffer.getWidth(),(args.x - drawArea.x)*buffer.getWidth()/drawArea.width)),
-								  MAX(0,MIN(buffer.getHeight(),(args.y - drawArea.y)*buffer.getHeight()/drawArea.height))));
+			ofPoint mpt = ofPoint(args.x,args.y);
+			if (enableScroll) mpt += sclPt;
+			
+			pts.push_back(ofPoint(MAX(0,MIN(buffer.getWidth(),(mpt.x - drawArea.x)*((enableScroll) ? 1.0 : buffer.getWidth()/drawArea.width))),
+								  MAX(0,MIN(buffer.getHeight(),(mpt.y - drawArea.y)*((enableScroll) ? 1.0 : buffer.getHeight()/drawArea.height)))));
 			active_pt = pts.size() - 1;
 			sync_Pts(-1);
 		}
@@ -354,11 +413,22 @@ void ofxMultiPointEditor::mouseReleased(ofMouseEventArgs & args){
 	
 }
 void ofxMultiPointEditor::mouseDragged(ofMouseEventArgs & args){
+	if (enableScroll) {
+		sclPt.set(MAX(0,MIN(buffer.getWidth() - drawArea.width,ofGetMouseX())),
+				  MAX(0,MIN(buffer.getHeight() - drawArea.height,ofGetMouseY())));
+		for (int i = 0;i < children.size();i++){
+			children[i]->sclPt = sclPt;
+		}
+	}
+
+	ofPoint mpt = ofPoint(args.x,args.y);
+	if (enableScroll) mpt += sclPt;
+	
 	if ((active_pt != -1)&&(Edit_phase == PHASE_POINT)){
 		moveView_count = MOVEVIEW_FRAME;
 		notSaved = true;
-		pts[active_pt] = ofPoint(MAX(0,MIN(buffer.getWidth(),(args.x - drawArea.x)*buffer.getWidth()/drawArea.width)),
-										 MAX(0,MIN(buffer.getHeight(),(args.y - drawArea.y)*buffer.getHeight()/drawArea.height)));
+		pts[active_pt] = ofPoint(MAX(0,MIN(buffer.getWidth(),(mpt.x - drawArea.x)*((enableScroll) ? 1.0 : buffer.getWidth()/drawArea.width))),
+								 MAX(0,MIN(buffer.getHeight(),(mpt.y - drawArea.y)*((enableScroll) ? 1.0 : buffer.getHeight()/drawArea.height))));
 		//Snap
 		if (bSnap){
 			Snapping_h = false;

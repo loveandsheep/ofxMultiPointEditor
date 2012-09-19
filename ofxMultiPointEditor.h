@@ -85,5 +85,7 @@ public:
 	int mv_motion_count;
 	float mv_length,mv_length_line;
 	int mv_last_slc;
-
+	
+	bool enableScroll;
+	ofPoint sclPt;
 };
