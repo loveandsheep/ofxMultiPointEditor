@@ -87,5 +87,9 @@ public:
 	int mv_last_slc;
 	
 	bool enableScroll;
+	bool scrollLock;
 	ofPoint sclPt;
+	bool viewDetail;
+	bool allFix;
+	bool allzoom;
 };

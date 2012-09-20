@@ -8,6 +8,7 @@
 #include "ofxMultiPointEditor.h"
 
 ofxMultiPointEditor::ofxMultiPointEditor(){
+	viewDetail = true;
 	sclPt.set(0, 0);
 	bAllocated = false;
 	
@@ -70,23 +71,25 @@ void ofxMultiPointEditor::draw(){
 	buffer.begin();
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	for (int i = 0;i < pts.size();i++){
-		ofSetRectMode(OF_RECTMODE_CENTER);
-		ofSetColor(255, 0, 187);
-		if (active_pt == i){
-			ofCircle(pts[i].x, pts[i].y, 5);
+	if (viewDetail){
+		for (int i = 0;i < pts.size();i++){
+			ofSetRectMode(OF_RECTMODE_CENTER);
+			ofSetColor(255, 0, 187);
+			if (active_pt == i){
+				ofCircle(pts[i].x, pts[i].y, 5);
+			}
+			
+			ofNoFill();
+			ofSetHexColor(0xFFFFFF);
+			if (i == last_selected){
+				ofCircle(pts[i], 10);
+			}
+			ofLine(pts[i].x-6, pts[i].y, pts[i].x+6, pts[i].y);
+			ofLine(pts[i].x, pts[i].y-6, pts[i].x, pts[i].y+6);
+			ofFill();
+			
+			ofSetRectMode(OF_RECTMODE_CORNER);
 		}
-
-		ofNoFill();
-		ofSetHexColor(0xFFFFFF);
-		if (i == last_selected){
-			ofCircle(pts[i], 10);
-		}
-		ofLine(pts[i].x-6, pts[i].y, pts[i].x+6, pts[i].y);
-		ofLine(pts[i].x, pts[i].y-6, pts[i].x, pts[i].y+6);
-		ofFill();
-		
-		ofSetRectMode(OF_RECTMODE_CORNER);
 	}
 	for (int i = 0;i < rects.size();i++){
 		ofColor col;
@@ -98,11 +101,13 @@ void ofxMultiPointEditor::draw(){
 		}
 		glEnd();
 		ofSetHexColor(0xFFFFFF);
-		glBegin(GL_LINE_LOOP);
-		for (int j = 0;j < 4;j++){
-			glVertex2f(pts[rects[i].idx[j]].x, pts[rects[i].idx[j]].y);
+		if (viewDetail){
+			glBegin(GL_LINE_LOOP);
+			for (int j = 0;j < 4;j++){
+				glVertex2f(pts[rects[i].idx[j]].x, pts[rects[i].idx[j]].y);
+			}
+			glEnd();
 		}
-		glEnd();
 		if (false){
 			ofPoint centroid;
 			float s1,s2;
@@ -340,7 +345,25 @@ void ofxMultiPointEditor::cdmEvent(ofxCDMEvent &ev){
 }
 
 void ofxMultiPointEditor::mouseMoved(ofMouseEventArgs & args){
-	if (enableScroll) {
+	if (allFix){
+		for (int i = 0;i < pts.size();i++){
+			pts[i] -= ofPoint(ofGetPreviousMouseX() - args.x,
+							  ofGetPreviousMouseY() - args.y);
+		}
+	}
+	if (allzoom){
+		ofPoint major,minor,middle;
+		for (int i = 0;i < pts.size();i++){
+			major = ofPoint(MAX(pts[i].x,major.x),MAX(pts[i].y,major.y));
+			minor = ofPoint(MIN(pts[i].x,major.x),MIN(pts[i].y,major.y));
+		}
+		middle = (major+minor)/2.0;
+		for (int i = 0;i < pts.size();i++){
+			ofPoint vec = pts[i] - middle;
+			pts[i] = middle + vec*(1+(ofGetPreviousMouseY() - args.y)/30.0f);
+		}
+	}
+	if ((enableScroll)&&(!scrollLock)) {
 		sclPt.set(MAX(0,MIN(buffer.getWidth() - drawArea.width,ofGetMouseX())),
 				  MAX(0,MIN(buffer.getHeight() - drawArea.height,ofGetMouseY())));
 		for (int i = 0;i < children.size();i++){
@@ -413,13 +436,14 @@ void ofxMultiPointEditor::mouseReleased(ofMouseEventArgs & args){
 	
 }
 void ofxMultiPointEditor::mouseDragged(ofMouseEventArgs & args){
-	if (enableScroll) {
+	if ((enableScroll)&&(!scrollLock)) {
 		sclPt.set(MAX(0,MIN(buffer.getWidth() - drawArea.width,ofGetMouseX())),
 				  MAX(0,MIN(buffer.getHeight() - drawArea.height,ofGetMouseY())));
 		for (int i = 0;i < children.size();i++){
 			children[i]->sclPt = sclPt;
 		}
 	}
+
 
 	ofPoint mpt = ofPoint(args.x,args.y);
 	if (enableScroll) mpt += sclPt;
@@ -476,10 +500,30 @@ void ofxMultiPointEditor::keyPressed(ofKeyEventArgs & key){
 			ev.message = menu.menu_name + "::Make::POINT";
 			cdmEvent(ev);
 		}
+		if (key.key == 'z') {
+			viewDetail ^= true;
+		}
+		if (key.key == 'q'){
+			allFix = true;
+		}
+		if (key.key == 'w'){
+			allzoom = true;
+		}
+		if (key.key == 'l'){
+			scrollLock = true;
+		}
 	}
 }
 void ofxMultiPointEditor::keyReleased(ofKeyEventArgs & key){
-	
+	if (key.key == 'q'){
+		allFix = false;
+	}
+	if (key.key == 'w'){
+		allzoom = false;
+	}
+	if (key.key == 'l'){
+		scrollLock = false;
+	}
 }
 
 void ofxMultiPointEditor::load(string fname){
