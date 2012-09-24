@@ -40,6 +40,7 @@ ofxMultiPointEditor::ofxMultiPointEditor(){
 	menu.RegisterMenu("Delete");
 	menu.RegisterBranch("Snap", &boolBranch);
 	menu.RegisterBranch("Make", &PhaseBranch);
+	menu.RegisterFader("transmissivity", &transparent);
 	menu.RegisterBranch("Load", &PresetBranch);
 	menu.RegisterBranch("Save", &PresetBranch);	
 	
@@ -56,6 +57,7 @@ ofxMultiPointEditor::ofxMultiPointEditor(){
 	notSaved = false;
 	last_selected = -1;
 	moveView_count = 0;
+	transparent = 1.0;
 }
 
 ofxMultiPointEditor::~ofxMultiPointEditor(){
@@ -80,7 +82,11 @@ void ofxMultiPointEditor::draw(){
 			}
 			
 			ofNoFill();
+<<<<<<< HEAD
 			ofSetHexColor(0xFFFFFF);
+=======
+			ofSetColor(255, 255*transparent);
+>>>>>>> add transparent fader
 			if (i == last_selected){
 				ofCircle(pts[i], 10);
 			}
@@ -93,14 +99,18 @@ void ofxMultiPointEditor::draw(){
 	}
 	for (int i = 0;i < rects.size();i++){
 		ofColor col;
-		col.setHsb((i*30)%255, 255, 255,228);
+		col.setHsb((i*30)%255, 255, 255,228*transparent);
 		ofSetColor(col);
 		glBegin(GL_QUADS);
 		for (int j = 0;j < 4;j++){
 			glVertex2f(pts[rects[i].idx[j]].x, pts[rects[i].idx[j]].y);
 		}
 		glEnd();
+<<<<<<< HEAD
 		ofSetHexColor(0xFFFFFF);
+=======
+		ofSetColor(255, 255*transparent);
+>>>>>>> add transparent fader
 		if (viewDetail){
 			glBegin(GL_LINE_LOOP);
 			for (int j = 0;j < 4;j++){
@@ -126,7 +136,7 @@ void ofxMultiPointEditor::draw(){
 		}
 	}
 	for (int i = 0;i < tris.size();i++){
-		ofSetHexColor(0xFFFFFF);
+		ofSetColor(255, 255*transparent);
 		glBegin(GL_LINE_LOOP);
 		for (int j = 0;j < 3;j++){
 			glVertex2f(pts[tris[i].idx[j]].x, pts[tris[i].idx[j]].y);
