@@ -472,6 +472,7 @@ void ofxMultiPointEditor::mouseDragged(ofMouseEventArgs & args){
 }
 
 void ofxMultiPointEditor::keyPressed(ofKeyEventArgs & key){
+    if (!menu.Enable) return;
 	if (last_selected != -1){
 		if ((key.key == OF_KEY_UP)||
 			(key.key == OF_KEY_DOWN)||
@@ -566,6 +567,9 @@ void ofxMultiPointEditor::load(string fname){
 		children[i]->load("child_"+ofToString(i)+"_"+fname);
 	}
 	notSaved = false;
+    if (hasChild){
+        cout << rects.size() << endl;
+    }
 }
 
 void ofxMultiPointEditor::save(string fname){
