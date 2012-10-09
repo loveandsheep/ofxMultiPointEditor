@@ -92,9 +92,5 @@ public:
 	bool viewDetail;
 	bool allFix;
 	bool allzoom;
-<<<<<<< HEAD
-=======
-	
 	float transparent;
->>>>>>> add transparent fader
 };

@@ -82,11 +82,7 @@ void ofxMultiPointEditor::draw(){
 			}
 			
 			ofNoFill();
-<<<<<<< HEAD
-			ofSetHexColor(0xFFFFFF);
-=======
 			ofSetColor(255, 255*transparent);
->>>>>>> add transparent fader
 			if (i == last_selected){
 				ofCircle(pts[i], 10);
 			}
@@ -106,11 +102,7 @@ void ofxMultiPointEditor::draw(){
 			glVertex2f(pts[rects[i].idx[j]].x, pts[rects[i].idx[j]].y);
 		}
 		glEnd();
-<<<<<<< HEAD
-		ofSetHexColor(0xFFFFFF);
-=======
 		ofSetColor(255, 255*transparent);
->>>>>>> add transparent fader
 		if (viewDetail){
 			glBegin(GL_LINE_LOOP);
 			for (int j = 0;j < 4;j++){
@@ -209,16 +201,16 @@ void ofxMultiPointEditor::draw(){
 		glBegin(GL_TRIANGLE_STRIP);
 		
 		glTexCoord2f(sclPt.x,sclPt.y);
-		glVertex2f(drawArea.x, drawArea.y);
+		glVertex2f	(drawArea.x, drawArea.y);
 		
 		glTexCoord2f(sclPt.x+drawArea.width,sclPt.y);
-		glVertex2f(drawArea.x+drawArea.width, drawArea.y);
+		glVertex2f	(drawArea.x+drawArea.width, drawArea.y);
 		
 		glTexCoord2f(sclPt.x,sclPt.y+drawArea.height);
-		glVertex2f(drawArea.x, drawArea.y+drawArea.height);
+		glVertex2f	(drawArea.x, drawArea.y+drawArea.height);
 
 		glTexCoord2f(sclPt.x+drawArea.width,sclPt.y+drawArea.height);
-		glVertex2f(drawArea.x+drawArea.width, drawArea.y+drawArea.height);
+		glVertex2f	(drawArea.x+drawArea.width, drawArea.y+drawArea.height);
 		
 		glEnd();
 		buffer.getTextureReference().unbind();
@@ -577,9 +569,7 @@ void ofxMultiPointEditor::load(string fname){
 		children[i]->load("child_"+ofToString(i)+"_"+fname);
 	}
 	notSaved = false;
-    if (hasChild){
-        cout << rects.size() << endl;
-    }
+
 }
 
 void ofxMultiPointEditor::save(string fname){
